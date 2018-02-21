@@ -1,0 +1,54 @@
+test:
+  Linux: test-4
+    Precipt: test-1
+    Trusty: test-2
+  Darwin: $(port_installed test-3) || { echo "hello"; echo "world"; }
+
+git:
+  Linux: apt-get install git-core2
+    Trusty: apt-get git-core
+
+vim:
+  Linux: apt-get install vim
+    Trusty: apt-get install vim
+    Raspbian8: apt-get install vim-nox
+  Darwin: $(port_installed vim) || port install vim +python27
+
+tmux:
+  Linux: apt-get install tmux
+  Darwin: $(port_installed tmux) || port install tmux
+
+ssh:
+  Linux: apt-get install ssh
+
+python:
+  Darwin: $(port_installed python27) || { port install python27; port select --set python python27; }
+
+pylint:
+  Linux: apt-get install pylint
+  Darwin: $(port_installed py27-pylint) || { port install py27-pylint; port select --set pylint py27; }
+
+pyflakes:
+  Linux: apt-get install python-flake8
+  Darwin: $(port_installed py27-flake8) || { port install py27-flake8; port select --set flake8 flake827; }
+
+pip:
+  Linux: apt-get install python-pip
+  Darwin: $(port_installed python27) || { port install py27-pip; port select --set pip pip27; }
+
+gpg:
+  Darwin: $(port_installed gnupg) || port install gnupg
+
+watch:
+  Darwin: $(port_installed watch) || port install watch
+
+htop:
+  Linux: apt-get install htop
+  Darwin:  $(port_installed htop) || port install htop
+
+iftop:
+  Linux: apt-get install iftop
+  Darwin: $(port_installed iftop) || port install iftop
+
+ctags:
+  Linux: apt-get install exuberant-ctags

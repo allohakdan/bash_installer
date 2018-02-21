@@ -7,12 +7,12 @@
 #
 # This prints out a list of key value pairs that bash interperts to be variable names
 # 
-# so the command 'echo $(parse_yaml packages.yml "config_" "Linux Trusty")'
+# so the command 'echo $(parse_packages_yaml packages.yml "config_" "Linux Trusty")'
 # would print out the following
 # config_test="test-4" config_test="test-2" config_git="git-core2" config_git="git-core" config_vim="vim" config_vim="vim" config_tmux="tmux" config_ssh="ssh" config_pylint="pylint" config_pyflakes="python-flake8" config_pip="python-pip" config_htop="htop" config_iftop="iftop" config_ctags="exuberant-ctags"
 #
-# use by running with eval $(parse_yaml packages.yml "config_" "Linux Trusty")
-parse_yaml() {
+# use by running with eval $(parse_packages_yaml packages.yml "config_" "Linux Trusty")
+parse_packages_yaml() {
    local prefix=$2
    local platform=$3
    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
@@ -42,11 +42,39 @@ parse_yaml() {
        # less specific so that we overwrite the same variable?
    }'
 }
-eval $(parse_yaml packages.yml "config_" "Linux Trusty")
+
+detect_platform() {
+    myplatform=`uname`
+    echo "Platform detected: $myplatform"
+    #TODO: Test if well named variable exists, exit early if not found
+    #TODO: return platform name on success
+}
+
+port_installed() {
+    # This will print out something like [[ 0 -eq 1 ]]...
+    # it is intended to be used in a config file like " $(port_installed htop) || port install htop
+    echo "[[ `port installed active | cut -d @ -f 1 | grep -c $1` -ge 1 ]]"
+}
+
+#eval $(parse_packages_yaml packages2.yml "config_" "Linux Trusty")
+eval $(parse_packages_yaml packages2.yml "config_" "Darwin")
 for var in ${!config_@}; do
-    printf "%s%q\n" "$var=" "${!var}"
+    #printf "%s%q\n" "$var=" "${!var}"
     #printf "%q\n" "${!var}"
+    echo ${!var}
+    eval ${!var}
 done
+echo "==============="
+# echo $config_pyflakes
+# eval $config_pyflakes
+# eval $config_pyflakes
+# eval $(parse_packages_yaml package_manager.yml "configmanagers_" "Darwin")
+# for var in ${!configmanagers_@}; do
+#     #printf "%s%q\n" "$var=" "${!var}"
+#     printf "%q\n" "${!var}"
+# done
+# eval "$configmanagers_default $config_tmux"
+
 # echo $(filter_yaml packages.yml "config_" "Trusty")
 
 # $(filter_yaml packages.yml "config_" "Linux Trusty")
@@ -66,4 +94,4 @@ done
 #       Linux: sudo apt-get install
 #         Trusty: sudo pip install
 #       Darwin: sudo port install
-
+# TODO: Present platform options
