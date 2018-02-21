@@ -1,0 +1,54 @@
+test:
+  Linux: test-4
+    Precipt: test-1
+    Trusty: test-2
+  Darwin: test-3
+
+git:
+  Linux: git-core2
+    Trusty: git-core
+
+vim:
+  Linux: vim
+    Trusty: vim
+    Raspbian8: vim-nox
+  Darwin: vim
+
+tmux:
+  Linux: tmux
+  Darwin: tmux
+
+ssh:
+  Linux: ssh
+
+python:
+  Darwin: python27
+
+pylint:
+  Linux: pylint
+  Darwin: py27-pylint
+
+pyflakes:
+  Linux: python-flake8
+  Darwin: py27-flake8
+
+pip:
+  Linux: python-pip
+  Darwin: py27-pip
+
+gpg:
+  Darwin: gnupg
+
+watch:
+  Darwin: watch
+
+htop:
+  Linux: htop
+  Darwin: htop
+
+iftop:
+  Linux: iftop
+  Darwin: iftop
+
+ctags:
+  Linux: exuberant-ctags
