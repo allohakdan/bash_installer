@@ -44,15 +44,13 @@ parse_packages_yaml() {
 }
 
 detect_platform() {
-    myplatform=`uname`
-    echo "Platform detected: $myplatform"
-    #TODO: Test if well named variable exists, exit early if not found
-    #TODO: return platform name on success
+    #TODO: Scrape package file and look for platforms defined
 }
 
 port_installed() {
-    # This will print out something like [[ 0 -eq 1 ]]...
-    # it is intended to be used in a config file like " $(port_installed htop) || port install htop
+    # This will print out something like [[ 0 -ge 1 ]]... where the first number indicates how many
+    # installed packages match the passed in name. 
+    # It is intended to be used in a config file like " $(port_installed htop) || port install htop
     echo "[[ `port installed active | cut -d @ -f 1 | grep -c $1` -ge 1 ]]"
 }
 
