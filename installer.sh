@@ -43,16 +43,44 @@ parse_packages_yaml() {
    }'
 }
 
-detect_platform() {
-    #TODO: Scrape package file and look for platforms defined
-}
-
+# port_installed()
+# This will print out something like [[ 0 -ge 1 ]]... where the first number indicates how many
+# installed packages match the passed in name. 
+# It is intended to be used in a config file like " $(port_installed htop) || port install htop
 port_installed() {
-    # This will print out something like [[ 0 -ge 1 ]]... where the first number indicates how many
-    # installed packages match the passed in name. 
-    # It is intended to be used in a config file like " $(port_installed htop) || port install htop
     echo "[[ `port installed active | cut -d @ -f 1 | grep -c $1` -ge 1 ]]"
 }
+
+
+
+# detect_platforms()
+# This will print out a list of the platforms defined inside the package file
+detect_platforms() { 
+    parse_platforms_yaml() {
+       local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+       sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+            -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+       awk -F$fs  '{
+          indent = length($1)/2;
+          vname[indent] = $2;
+          
+          for (i in vname) {
+            if (i > indent) {
+              delete vname[i]
+            }
+          }
+          # we want to make sure we are not picking up the names of packages, only platforms
+          if( vname[0] != $2){
+    #           printf("(%s,%s) ", vname[0], $2);
+                printf("%s ", $2);
+            }
+       }'
+    }
+
+echo "$(parse_platforms_yaml packages2.yml)" | xargs -n1 | sort -u | xargs
+}
+
+
 
 #eval $(parse_packages_yaml packages2.yml "config_" "Linux Trusty")
 eval $(parse_packages_yaml packages2.yml "config_" "Darwin")
@@ -63,33 +91,4 @@ for var in ${!config_@}; do
     eval ${!var}
 done
 echo "==============="
-# echo $config_pyflakes
-# eval $config_pyflakes
-# eval $config_pyflakes
-# eval $(parse_packages_yaml package_manager.yml "configmanagers_" "Darwin")
-# for var in ${!configmanagers_@}; do
-#     #printf "%s%q\n" "$var=" "${!var}"
-#     printf "%q\n" "${!var}"
-# done
-# eval "$configmanagers_default $config_tmux"
 
-# echo $(filter_yaml packages.yml "config_" "Trusty")
-
-# $(filter_yaml packages.yml "config_" "Linux Trusty")
-#   Accept "Linux" if no "Trusty"
-#   Accept the deepest name defined for a package
-
-
-
-# TODO: in addition to packages.yml also define 
-# package-names: what package names to use for different platforms
-#     git:
-#       Linux: git-core
-#         Trust: git
-#       Darwin: git
-# package-managers: What package managers to use for different packages on different platforms
-#     git:
-#       Linux: sudo apt-get install
-#         Trusty: sudo pip install
-#       Darwin: sudo port install
-# TODO: Present platform options
