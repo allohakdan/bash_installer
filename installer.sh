@@ -44,7 +44,9 @@ parse_packages_yaml() {
 }
 
 # port_installed()
-# This will print out something like [[ 0 -ge 1 ]]... where the first number indicates how many
+# Macports can be very slow if you accidentally try to reinstall a list of already installed packages.
+# This is a small function that lets us test to see if something is already installed and skip it.
+# It will print out something like [[ 0 -ge 1 ]]... where the first number indicates how many
 # installed packages match the passed in name. 
 # It is intended to be used in a config file like " $(port_installed htop) || port install htop
 port_installed() {
@@ -54,8 +56,10 @@ port_installed() {
 
 
 # detect_platforms()
+# This is passed in the location of the yaml file
 # This will print out a list of the platforms defined inside the package file
 detect_platforms() { 
+    yamlpath=$1
     parse_platforms_yaml() {
        local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
        sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
@@ -77,43 +81,19 @@ detect_platforms() {
        }'
     }
 
-echo "$(parse_platforms_yaml packages2.yml)" | xargs -n1 | sort -u | xargs
+echo "$(parse_platforms_yaml $yamlpath)" | xargs -n1 | sort -u | xargs
 }
 
 
 
 
-detected_platforms=$(detect_platforms)
-if [ $# -lt 2 ]
-then
-    echo "Usage : sudo ./installer.sh <packages.yaml> <MainPlatform> [SpecificPlatform ...]"
-    echo "Specify platform names in order of most generic to specific."
-    echo "Example - 'Linux Trust' would install packages which are defined for linux, unless a"
-    echo "Trusty version has also been defined."
-    echo ""
-    echo "Platforms available:  $detected_platforms"
-    exit
-fi
 
-
-# Verify yaml file exists
-yaml_path=$1
-
-
-# Verify that input packages match names found in file
-platforms="${*:2}"  # https://stackoverflow.com/a/9057392
-echo $yaml_path
-echo $platforms
-
-
-# Check that the user is root (because we usually want that for installing)
-if [ "$(whoami)" != "root" ]; then
-    echo "You are not ROOT, which is usually required to install packages."
-    echo "Proceed? [yes or no]"
+confirm_user() {
+    echo -n "Proceed? [yes or no] "
     read yno
     case $yno in
             [yY] | [yY][Ee][Ss] )
-                    echo "Installing"
+                    echo ""
                     ;;
     
             [nN] | [n|N][O|o] )
@@ -121,8 +101,62 @@ if [ "$(whoami)" != "root" ]; then
                     exit 1
                     ;;
             *) echo "Invalid input"
+                exit 1
                 ;;
     esac
+}
+
+
+######################## MAIN ##########################
+
+
+if [ $# -lt 2 ]
+then
+    echo "Usage : sudo ./installer.sh <packages.yaml> <MainPlatform> [SpecificPlatform ...]"
+    echo "Specify platform names in order of most generic to specific."
+    echo "Examples:"
+    echo "  'installer.sh packages.yml Darwin'"
+    echo "  Install pacages which are defined for Darwin."
+    echo "  'installer.sh packages.yml Linux Trusty'"
+    echo "  Install packages which are defined for linux, unless Trusty version has also been defined."
+fi
+
+if [ $# -lt 1 ]
+then
+    echo ""
+    echo "Running [ installer.sh packages.yml ] will print out a list of defined platforms"
+    exit
+fi
+
+# Verify yaml file exists
+yaml_path=$1
+if [ ! -f $yaml_path ]; then
+    echo ""
+    echo "Error: File \"$yaml_path\" not found!"
+    exit
+fi
+
+
+
+# Display list of platforms available
+detected_platforms=$(detect_platforms "$yaml_path")
+if [ $# -lt 2 ]; then
+    echo ""
+    echo "Platforms available:  $detected_platforms"
+    exit
+fi
+
+
+
+# TODO: Verify that input packages match names found in file
+platforms="${*:2}"  # https://stackoverflow.com/a/9057392
+echo $platforms
+
+
+# Check that the user is root (because we usually want that for installing)
+if [ "$(whoami)" != "root" ]; then
+    echo "You are not ROOT, which is usually required to install packages."
+    confirm_user
 fi
 
 
@@ -140,21 +174,7 @@ for var in ${!config_@}; do
     echo ${!var}
 done
 echo "=========================="
-echo -n "Proceed? [yes or no]: "
-read yno
-case $yno in
-        [yY] | [yY][Ee][Ss] )
-                echo "Installing"
-                ;;
-
-        [nN] | [n|N][O|o] )
-                echo "Exiting now"
-                exit 1
-                ;;
-        *) echo "Invalid input"
-            ;;
-esac
-
+confirm_user
 
 
 # Install Software
