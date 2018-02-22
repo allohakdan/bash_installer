@@ -5,7 +5,7 @@ test:
   Darwin: $(port_installed test-3) || { echo "hello"; echo "world"; }
 
 git:
-  Linux: apt-get install git-core2
+  Linux: apt-get install git-core
     Trusty: apt-get git-core
 
 vim:
@@ -34,7 +34,7 @@ pyflakes:
 
 pip:
   Linux: apt-get install python-pip
-  Darwin: $(port_installed python27) || { port install py27-pip; port select --set pip pip27; }
+  Darwin: $(port_installed py27-pip) || { port install py27-pip; port select --set pip pip27; }
 
 gpg:
   Darwin: $(port_installed gnupg) || port install gnupg
