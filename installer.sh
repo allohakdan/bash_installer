@@ -81,14 +81,97 @@ echo "$(parse_platforms_yaml packages2.yml)" | xargs -n1 | sort -u | xargs
 }
 
 
-if [ $# -eq 0 ]
+
+
+detected_platforms=$(detect_platforms)
+if [ $# -lt 2 ]
 then
-    echo "Usage : sudo ./installer.sh [AltPlatform AltPlatform...] MainPlatform"
+    echo "Usage : sudo ./installer.sh <packages.yaml> <MainPlatform> [SpecificPlatform ...]"
+    echo "Specify platform names in order of most generic to specific."
+    echo "Example - 'Linux Trust' would install packages which are defined for linux, unless a"
+    echo "Trusty version has also been defined."
     echo ""
-    echo "Platforms available:   $(detect_platforms)"
+    echo "Platforms available:  $detected_platforms"
     exit
 fi
 
+
+# Verify yaml file exists
+yaml_path=$1
+
+
+# Verify that input packages match names found in file
+platforms="${*:2}"  # https://stackoverflow.com/a/9057392
+echo $yaml_path
+echo $platforms
+
+
+# Check that the user is root (because we usually want that for installing)
+if [ "$(whoami)" != "root" ]; then
+    echo "You are not ROOT, which is usually required to install packages."
+    echo "Proceed? [yes or no]"
+    read yno
+    case $yno in
+            [yY] | [yY][Ee][Ss] )
+                    echo "Installing"
+                    ;;
+    
+            [nN] | [n|N][O|o] )
+                    echo "Exiting now"
+                    exit 1
+                    ;;
+            *) echo "Invalid input"
+                ;;
+    esac
+fi
+
+
+
+# Run the parser
+eval $(parse_packages_yaml $yaml_path "config_" "$platforms")
+
+
+
+
+# show list of packages to be installed
+echo ""
+echo "=== Commands to be run ==="
+for var in ${!config_@}; do
+    echo ${!var}
+done
+echo "=========================="
+echo -n "Proceed? [yes or no]: "
+read yno
+case $yno in
+        [yY] | [yY][Ee][Ss] )
+                echo "Installing"
+                ;;
+
+        [nN] | [n|N][O|o] )
+                echo "Exiting now"
+                exit 1
+                ;;
+        *) echo "Invalid input"
+            ;;
+esac
+
+
+
+# Install Software
+echo "=== Installing Software ==="
+for var in ${!config_@}; do
+    echo "=====> ${!var}"
+    eval ${!var}
+done
+
+
+
+exit
+
+
+
+#############################################################
+# Old code from testing purposes....
 case "$1" in
 
     test) 
