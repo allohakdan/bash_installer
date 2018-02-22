@@ -81,14 +81,27 @@ echo "$(parse_platforms_yaml packages2.yml)" | xargs -n1 | sort -u | xargs
 }
 
 
+if [ $# -eq 0 ]
+then
+    echo "Usage : sudo ./installer.sh [AltPlatform AltPlatform...] MainPlatform"
+    echo ""
+    echo "Platforms available:   $(detect_platforms)"
+    exit
+fi
 
-#eval $(parse_packages_yaml packages2.yml "config_" "Linux Trusty")
-eval $(parse_packages_yaml packages2.yml "config_" "Darwin")
-for var in ${!config_@}; do
-    #printf "%s%q\n" "$var=" "${!var}"
-    #printf "%q\n" "${!var}"
-    echo ${!var}
-    eval ${!var}
-done
-echo "==============="
+case "$1" in
+
+    test) 
+        #eval $(parse_packages_yaml packages2.yml "config_" "Linux Trusty")
+        eval $(parse_packages_yaml packages2.yml "config_" "Darwin")
+        for var in ${!config_@}; do
+            #printf "%s%q\n" "$var=" "${!var}"
+            #printf "%q\n" "${!var}"
+            echo ${!var}
+            eval ${!var}
+        done
+        echo "==============="
+        ;;
+
+esac
 
