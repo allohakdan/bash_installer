@@ -106,27 +106,82 @@ confirm_user() {
     esac
 }
 
+############ INSTALLER ################
+run_installer() {
+        if [ $# -lt 3 ]
+        then
+            echo "Usage : sudo ./installer.sh <packages.yaml> install <MainPlatform> [SpecificPlatform ...]"
+            echo "Specify platform names in order of most generic to specific."
+            echo "Examples:"
+            echo "  'installer.sh packages.yml Darwin'"
+            echo "  Install pacages which are defined for Darwin."
+            echo "  'installer.sh packages.yml Linux Trusty'"
+            echo "  Install packages which are defined for linux, unless Trusty version has also been defined."
+        fi
+
+
+        if [ $# -lt 3 ]; then
+            echo ""
+            echo "Please specify platforms. Available Platforms:  $detected_platforms"
+            exit
+        fi
+
+
+
+        # TODO: Verify that input packages match names found in file
+        platforms="${*:2}"  # https://stackoverflow.com/a/9057392
+        echo $platforms
+
+
+        # Check that the user is root (because we usually want that for installing)
+        if [ "$(whoami)" != "root" ]; then
+            echo "You are not ROOT, which is usually required to install packages."
+            confirm_user
+        fi
+
+
+
+        # Run the parser
+        eval $(parse_packages_yaml $yaml_path "config_" "$platforms")
+
+
+
+        # show list of packages to be installed
+        echo ""
+        echo "=== Commands to be run ==="
+        for var in ${!config_@}; do
+            echo ${!var}
+        done
+        echo "=========================="
+        confirm_user
+
+
+        # Install Software
+        echo "=== Installing Software ==="
+        for var in ${!config_@}; do
+            echo "=====> ${!var}"
+            eval ${!var}
+        done
+}
+
+
 
 ######################## MAIN ##########################
 
-
 if [ $# -lt 2 ]
 then
-    echo "Usage : sudo ./installer.sh <packages.yaml> <MainPlatform> [SpecificPlatform ...]"
-    echo "Specify platform names in order of most generic to specific."
-    echo "Examples:"
-    echo "  'installer.sh packages.yml Darwin'"
-    echo "  Install pacages which are defined for Darwin."
-    echo "  'installer.sh packages.yml Linux Trusty'"
-    echo "  Install packages which are defined for linux, unless Trusty version has also been defined."
-fi
-
-if [ $# -lt 1 ]
-then
-    echo ""
-    echo "Running [ installer.sh packages.yml ] will print out a list of defined platforms"
+    echo "Usage : sudo ./installer.sh <packages.yaml> <command>"
+    echo "     commands: list, install"
     exit
 fi
+
+
+# if [ $# -lt 2 ]
+# then
+#     echo ""
+#     echo "Running [ installer.sh packages.yml ] will print out a list of defined platforms"
+#     exit
+# fi
 
 # Verify yaml file exists
 yaml_path=$1
@@ -136,13 +191,34 @@ if [ ! -f $yaml_path ]; then
     exit
 fi
 
+command=$2
+case $command in
+    "list" )
+        # Display list of platforms available
+        detected_platforms=$(detect_platforms "$yaml_path")
+        echo $detected_platforms
+        exit 0
+        ;;
+    "install" )
+        echo "install packages"
+        run_installer ${*:2}
+        exit 0
+        ;;
+    * ) 
+        echo "Bad command"
+        exit 1
+        ;;
+esac
+
+echo "never get here"
+exit
 
 
-# Display list of platforms available
-detected_platforms=$(detect_platforms "$yaml_path")
-if [ $# -lt 2 ]; then
+
+
+if [ $# -lt 3 ]; then
     echo ""
-    echo "Platforms available:  $detected_platforms"
+    echo "Please specify platforms. Available Platforms:  $detected_platforms"
     exit
 fi
 
@@ -163,7 +239,6 @@ fi
 
 # Run the parser
 eval $(parse_packages_yaml $yaml_path "config_" "$platforms")
-
 
 
 
