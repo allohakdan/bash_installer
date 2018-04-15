@@ -130,7 +130,7 @@ run_installer() {
 
         # TODO: Verify that input packages match names found in file
         platforms="${*:2}"  # https://stackoverflow.com/a/9057392
-        echo $platforms
+        echo "Install packages for $platforms"
 
 
         # Check that the user is root (because we usually want that for installing)
@@ -200,7 +200,6 @@ case $command in
         exit 0
         ;;
     "install" )
-        echo "install packages"
         run_installer ${*:2}
         exit 0
         ;;
@@ -212,57 +211,6 @@ esac
 
 echo "never get here"
 exit
-
-
-
-
-if [ $# -lt 3 ]; then
-    echo ""
-    echo "Please specify platforms. Available Platforms:  $detected_platforms"
-    exit
-fi
-
-
-
-# TODO: Verify that input packages match names found in file
-platforms="${*:2}"  # https://stackoverflow.com/a/9057392
-echo $platforms
-
-
-# Check that the user is root (because we usually want that for installing)
-if [ "$(whoami)" != "root" ]; then
-    echo "You are not ROOT, which is usually required to install packages."
-    confirm_user
-fi
-
-
-
-# Run the parser
-eval $(parse_packages_yaml $yaml_path "config_" "$platforms")
-
-
-
-# show list of packages to be installed
-echo ""
-echo "=== Commands to be run ==="
-for var in ${!config_@}; do
-    echo ${!var}
-done
-echo "=========================="
-confirm_user
-
-
-# Install Software
-echo "=== Installing Software ==="
-for var in ${!config_@}; do
-    echo "=====> ${!var}"
-    eval ${!var}
-done
-
-
-
-exit
-
 
 
 #############################################################
