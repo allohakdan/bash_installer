@@ -200,7 +200,7 @@ case $command in
         exit 0
         ;;
     "install" )
-        run_installer ${*:2}
+        run_installer $yaml_path ${*:2}
         exit 0
         ;;
     * ) 
